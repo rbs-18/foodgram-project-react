@@ -21,4 +21,5 @@ class UserViewSet(viewsets.ModelViewSet):
 class CustomTokenCreateView(TokenCreateView):
     """ Custom viewset for creating token. """
 
+    queryset = User.objects.all()
     serializer_class = CustomTokenCreateSerializer
