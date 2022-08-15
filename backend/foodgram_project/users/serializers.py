@@ -2,6 +2,8 @@ from django.contrib.auth import authenticate, get_user_model
 from djoser.serializers import TokenCreateSerializer
 from rest_framework import serializers
 
+from recipes.models import Subscriptions
+
 User = get_user_model()
 
 
@@ -24,6 +26,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     """ Serializer for User model. """
 
+    is_subscribed = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = (
@@ -32,8 +36,18 @@ class UserSerializer(serializers.ModelSerializer):
             'username',
             'first_name',
             'last_name',
-            # 'is_subscribed'
+            'is_subscribed'
         )
+
+    def get_is_subscribed(self, obj):
+        try:
+            is_exist = Subscriptions.objects.filter(
+                follower=self.context['request'].user,
+                author=obj,
+            ).exists()
+        except (TypeError, KeyError):
+            return False
+        return is_exist
 
 
 class CustomTokenCreateSerializer(TokenCreateSerializer):
