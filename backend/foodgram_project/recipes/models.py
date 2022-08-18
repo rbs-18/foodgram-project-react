@@ -83,3 +83,27 @@ class TagRecipe(models.Model):
 
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+
+
+class Favorite(models.Model):
+    """ Model for favorite recipes. """
+
+    user = models.ForeignKey(
+        User,
+        verbose_name='Пользователь',
+        on_delete=models.CASCADE
+    )
+    recipes = models.ManyToManyField(
+        Recipe,
+        through='RecipeFavorite',
+        through_fields=('favorite', 'recipe'),
+        verbose_name='Recipe'
+    )
+
+
+class RecipeFavorite(models.Model):
+    """
+    Model for many to many realization between Favorites and Recepie models.
+    """
+    favorite = models.ForeignKey(Favorite, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
