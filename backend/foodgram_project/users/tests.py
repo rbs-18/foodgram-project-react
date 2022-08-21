@@ -38,7 +38,7 @@ class CreateUserTest(APITestCase):
         self.assertEqual(
             response.status_code,
             status.HTTP_201_CREATED,
-            'Return status is invalid',
+            'Wrong response status',
         )
         self.assertEqual(
             User.objects.count(),

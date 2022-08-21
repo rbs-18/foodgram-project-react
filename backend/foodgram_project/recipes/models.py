@@ -9,7 +9,7 @@ class Tag(models.Model):
     """ Model for tags. """
 
     name = models.CharField('Name of tag', max_length=200, unique=True)
-    color = ColorField('Color', format='hexa')
+    color = ColorField('Color')
     slug = models.CharField('Unique slug', max_length=200, unique=True)
 
 
