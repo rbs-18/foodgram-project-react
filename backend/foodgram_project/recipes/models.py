@@ -71,8 +71,12 @@ class IngredientRecipe(models.Model):
     Model for many to many realization between Recepie and Ingridient models.
     """
 
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE,
+    )
+    ingredient = models.ForeignKey(
+        Ingredient, on_delete=models.CASCADE,
+    )
     amount = models.SmallIntegerField()
 
 

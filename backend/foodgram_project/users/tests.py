@@ -9,19 +9,11 @@ User = get_user_model()
 class CreateUserTest(APITestCase):
     """ Testing of endpoints, connection with User model. """
 
-    # @classmethod
-    # def setUpClass(cls):
-    #     super().setUpClass()
-    #     cls.user = User.objects.create_user(
-    #         email='test_admin@test_admin.ru',
-    #         username='test_admin',
-    #         first_name='admin'
-    #         last_name='test',
-    #         password=make_password('AdmiN11'),
-    #     )
-
     def test_registration_new_user(self):
-        """ Test registration of new user from api/users/ endpoint. """
+        """
+        Test registration of new user with valid data
+        from api/users/ endpoint.
+        """
 
         object_count = User.objects.count()
         valid_data = {
@@ -59,5 +51,54 @@ class CreateUserTest(APITestCase):
                 'user',
                 'test',
             ),
-            "Object does not match created"
+            "Invalid user data",
         )
+
+    def test_invalid_data_registration(self):
+        """
+        Test registration of new user with invalid data
+        from api/users/ endpoint.
+        """
+
+        invalid_data = [
+            {
+                'email': 'test_user@user.ru',
+                'username': 'test_user',
+                'first_name': 'user',
+                'last_name': 'test',
+            },
+            {
+                'email': 'test_user@user.ru',
+                'username': 'test_user',
+                'first_name': 'user',
+                'password': 'testpassword11',
+            },
+            {
+                'email': 'test_user@user.ru',
+                'username': 'test_user',
+                'last_name': 'test',
+                'password': 'testpassword11',
+            },
+            {
+                'email': 'test_user@user.ru',
+                'first_name': 'user',
+                'last_name': 'test',
+                'password': 'testpassword11',
+            },
+            {
+                'username': 'test_user',
+                'first_name': 'user',
+                'last_name': 'test',
+                'password': 'testpassword11',
+            }
+        ]
+
+        for data in invalid_data:
+            with self.subTest(data=data):
+                response = self.client.post(
+                    reverse('user-list'),
+                    data,
+                )
+                self.assertEqual(
+                    response.status_code, status.HTTP_400_BAD_REQUEST
+                )

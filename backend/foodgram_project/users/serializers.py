@@ -10,6 +10,13 @@ User = get_user_model()
 class CreateUserSerializer(serializers.ModelSerializer):
     """ Serializer for registration new users. """
 
+    password = serializers.CharField(
+        max_length=150,
+        write_only=True,
+        style={"input_type": "password"},
+        label="New password",
+    )
+
     class Meta:
         model = User
         fields = (
@@ -20,7 +27,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
             'last_name',
             'password',
         )
-        extra_kwargs = {'password': {'write_only': True}}
+        # extra_kwargs = {'password': {'write_only': True}}
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -40,14 +47,10 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        try:
-            is_exist = Subscription.objects.filter(
-                follower=self.context['request'].user,
-                author=obj,
-            ).exists()
-        except (TypeError, KeyError):
-            return False
-        return is_exist
+        return Subscription.objects.filter(
+            follower=self.context['request'].user.id,
+            author=obj,
+        ).exists()
 
 
 class CustomTokenCreateSerializer(TokenCreateSerializer):
