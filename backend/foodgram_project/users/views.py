@@ -1,9 +1,9 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
 from djoser.views import TokenCreateView
+from djoser.utils import login_user
+from djoser.conf import settings
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -37,21 +37,13 @@ class UserViewSet(CreateRetrieveListViewSet):
         return UserSerializer
 
     def perform_create(self, serializer):
-        password = make_password(self.request.data['password'])
-        serializer.save(password=password)
-
-    def perform_update(self, serializer):
-        password = make_password(self.request.data['password'])
-        serializer.save(password=password)
-
-    def retrieve(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            raise NotAuthenticated
-        return super().retrieve(request, *args, **kwargs)
+        new_user = serializer.save()
+        new_user.set_password(serializer.validated_data.get('password'))
+        new_user.save()
 
     @action(detail=False, permission_classes=[IsAuthenticated])
     def me(self, request):
-        serializer = UserSerializer(request.user)
+        serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
     @action(
@@ -83,3 +75,11 @@ class CustomTokenCreateView(TokenCreateView):
     """ Custom viewset for creating token. """
 
     serializer_class = CustomTokenCreateSerializer
+
+    def _action(self, serializer):
+        token = login_user(self.request, serializer.user)
+        token_serializer_class = settings.SERIALIZERS.token
+        return Response(
+            data=token_serializer_class(token).data,
+            status=status.HTTP_201_CREATED,
+        )

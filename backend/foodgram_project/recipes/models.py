@@ -12,12 +12,18 @@ class Tag(models.Model):
     color = ColorField('Color')
     slug = models.CharField('Unique slug', max_length=200, unique=True)
 
+    def __str__(self):
+        return self.name
+
 
 class Ingredient(models.Model):
     """ Model for ingredients. """
 
     name = models.CharField('Name of product', max_length=200, db_index=True)
     measurement_unit = models.CharField('Units', max_length=200)
+
+    def __str__(self):
+        return self.name
 
 
 class Subscription(models.Model):
@@ -60,10 +66,13 @@ class Recipe(models.Model):
         related_name='recepes',
         verbose_name='Ingredients',
     )
-    image = models.BinaryField('Image', editable=True,)
+    image = models.ImageField('Image', upload_to='recipes/')
     name = models.CharField('Name', max_length=200)
     text = models.TextField('Description')
     cooking_time = models.PositiveIntegerField('Duration of cooking')
+
+    def __str__(self):
+        return self.name
 
 
 class IngredientRecipe(models.Model):
@@ -72,12 +81,19 @@ class IngredientRecipe(models.Model):
     """
 
     recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE,
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='ingredients_list',
     )
     ingredient = models.ForeignKey(
-        Ingredient, on_delete=models.CASCADE,
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name='recipes',
     )
-    amount = models.SmallIntegerField()
+    amount = models.PositiveSmallIntegerField()
+
+    def __str__(self):
+        return f'{self.ingredient} for {self.recipe}'
 
 
 class TagRecipe(models.Model):
@@ -94,20 +110,30 @@ class Favorite(models.Model):
 
     user = models.ForeignKey(
         User,
-        verbose_name='Пользователь',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='favorite',
+        verbose_name='User',
     )
-    recipes = models.ManyToManyField(
+    recipe = models.ForeignKey(
         Recipe,
-        through='RecipeFavorite',
-        through_fields=('favorite', 'recipe'),
+        on_delete=models.CASCADE,
+        related_name='favorite',
+        verbose_name='Recipe',
+    )
+
+
+class ShoppingList(models.Model):
+    """ Model for shopping list. """
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='shoping_list',
+        verbose_name='User',
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='shoping_list',
         verbose_name='Recipe'
     )
-
-
-class RecipeFavorite(models.Model):
-    """
-    Model for many to many realization between Favorites and Recepie models.
-    """
-    favorite = models.ForeignKey(Favorite, on_delete=models.CASCADE)
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)

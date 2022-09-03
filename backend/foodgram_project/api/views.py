@@ -1,4 +1,4 @@
-from rest_framework import filters, viewsets
+from rest_framework import filters, viewsets, mixins
 
 from recipes.models import Ingredient, Recipe, Tag
 from .serializers import (
@@ -12,7 +12,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    pagination_class = None  # TODO определиться позже, где определять класс пагинации
+    pagination_class = None  # TODO определиться, где определять класс пагинации
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -20,7 +20,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    pagination_class = None  # TODO определиться позже, где определять класс пагинации
+    pagination_class = None  # TODO определиться, где определять класс пагинации
     filter_backends = (filters.SearchFilter,)
     search_fields = ('^name',)
 
@@ -29,9 +29,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """ Viewset for Recipe model. """
 
     queryset = Recipe.objects.all()
+    http_method_names = ['get', 'post', 'patch']
 
     def get_serializer_class(self):
-        if self.action in ['create']:
+        if self.request.method in ['POST', 'PATCH']:
             return RecipeCreateSerializer
         return RecipeSerializer
 

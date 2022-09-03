@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, get_user_model
+import django.contrib.auth.password_validation as validators
 from djoser.serializers import TokenCreateSerializer
 from rest_framework import serializers
 
@@ -27,7 +28,10 @@ class CreateUserSerializer(serializers.ModelSerializer):
             'last_name',
             'password',
         )
-        # extra_kwargs = {'password': {'write_only': True}}
+
+    def validate_password(self, value):
+        validators.validate_password(value)
+        return value
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -48,7 +52,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         return Subscription.objects.filter(
-            follower=self.context['request'].user.id,
+            follower=self.context.get('request').user.id,
             author=obj,
         ).exists()
 
@@ -87,13 +91,13 @@ class PasswordSerializer(serializers.Serializer):
 
     new_password = serializers.CharField(
         max_length=150,
-        style={"input_type": "password"},
-        label="New password",
+        style={'input_type': 'password'},
+        label='New password',
     )
     current_password = serializers.CharField(
         max_length=150,
-        style={"input_type": "password"},
-        label="New password",
+        style={'input_type': 'password'},
+        label='Current password',
     )
 
     def validate(self, attrs):
@@ -102,3 +106,7 @@ class PasswordSerializer(serializers.Serializer):
                 "new password couldn't be the same"
             )
         return attrs
+
+    def validate_new_password(self, value):
+        validators.validate_password(value)
+        return value
