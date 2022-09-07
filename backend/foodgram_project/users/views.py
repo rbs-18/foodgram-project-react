@@ -7,6 +7,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from api.serializers import SubscriptionSerializer
+from recipes.models import Subscription
 from .serializers import (
     CreateUserSerializer, CustomTokenCreateSerializer,
     PasswordSerializer, UserSerializer
@@ -26,7 +28,7 @@ class CreateRetrieveListViewSet(
     pass
 
 
-class UserViewSet(CreateRetrieveListViewSet):
+class UserViewSet(CreateRetrieveListViewSet): # TODO сделать фильтрацию
     """ Viewset for User model. """
 
     queryset = User.objects.all()
@@ -49,7 +51,7 @@ class UserViewSet(CreateRetrieveListViewSet):
     @action(
         detail=False,
         methods=['post'],
-        permission_classes=[IsAuthenticated]
+        permission_classes=[IsAuthenticated],
     )
     def set_password(self, request):
         user = request.user
@@ -69,6 +71,12 @@ class UserViewSet(CreateRetrieveListViewSet):
             user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, permission_classes=[IsAuthenticated])
+    def subscriptions(self, request):  # TODO сделать пагинацию
+        subscriptions = Subscription.objects.filter(follower=request.user)
+        serializer = SubscriptionSerializer(subscriptions, many=True)
+        return Response(serializer.data)
 
 
 class CustomTokenCreateView(TokenCreateView):

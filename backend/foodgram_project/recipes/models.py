@@ -42,6 +42,14 @@ class Subscription(models.Model):
         verbose_name='Following',
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['follower', 'following'],
+                name='unique_subscription'
+            )
+        ]
+
 
 class Recipe(models.Model):
     """ Model for recepies. """

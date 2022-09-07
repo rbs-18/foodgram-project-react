@@ -2,7 +2,9 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from users.views import UserViewSet
-from .views import RecipeViewSet, TagViewSet, IngredientViewSet
+from .views import (
+    RecipeViewSet, TagViewSet, IngredientViewSet, SubscribeView
+)
 
 router = DefaultRouter()
 
@@ -15,4 +17,5 @@ urlpatterns = [
     # path('auth/', include('djoser.urls')),
     path('auth/', include('users.urls', namespace='users')),
     path('', include(router.urls)),
+    path('users/<int:user_id>/subscribe/', SubscribeView.as_view()),
 ]

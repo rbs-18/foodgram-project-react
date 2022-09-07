@@ -1,11 +1,16 @@
+from email.policy import default
+from django.contrib.auth import get_user_model
 from drf_extra_fields.fields import Base64ImageField
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from users.serializers import UserSerializer
 from recipes.models import (
-    Favorite, Ingredient, IngredientRecipe, Recipe, ShoppingList, Tag
+    Favorite, Ingredient, IngredientRecipe, Recipe,
+    ShoppingList, Tag, Subscription
 )
+
+User = get_user_model()
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -146,3 +151,50 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_in_shopping_cart(self, obj):
         return self.get_is_obj(obj, ShoppingList)
+
+
+class ShortRecipeSerializer(serializers.ModelSerializer):
+    """ Serializer for presentation in User serializers. """
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    """ Serializer for Subscription model. """
+
+    email = serializers.ReadOnlyField(source='author.email')
+    id = serializers.ReadOnlyField(source='author.id')
+    username = serializers.ReadOnlyField(source='author.username')
+    first_name = serializers.ReadOnlyField(source='author.first_name')
+    last_name = serializers.ReadOnlyField(source='author.last_name')
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Subscription
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count',
+        )
+
+    def get_is_subscribed(self, obj):
+        return Subscription.objects.filter(
+            follower=obj.follower,
+            author=obj.author,
+        ).exists()
+
+    def get_recipes(self, obj):
+        recipes = obj.author.recipes
+        return ShortRecipeSerializer(recipes, many=True).data
+
+    def get_recipes_count(self, obj):
+        return obj.author.recipes.count()

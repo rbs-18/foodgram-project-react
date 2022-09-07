@@ -15,7 +15,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
         max_length=150,
         write_only=True,
         style={"input_type": "password"},
-        label="New password",
+        label="Password",
     )
 
     class Meta:
@@ -47,7 +47,7 @@ class UserSerializer(serializers.ModelSerializer):
             'username',
             'first_name',
             'last_name',
-            'is_subscribed'
+            'is_subscribed',
         )
 
     def get_is_subscribed(self, obj):
@@ -82,7 +82,7 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
             if self.user and not self.user.check_password(password):
                 self.fail('invalid_credentials')
         if self.user and self.user.is_active:
-            return attrs
+            return attrs  # TODO переделать return
         self.fail('invalid_credentials')
 
 
@@ -103,7 +103,7 @@ class PasswordSerializer(serializers.Serializer):
     def validate(self, attrs):
         if attrs.get('new_password') == attrs.get('current_password'):
             raise serializers.ValidationError(
-                "new password couldn't be the same"
+                "New password couldn't be the same",
             )
         return attrs
 
