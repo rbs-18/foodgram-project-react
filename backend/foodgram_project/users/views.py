@@ -74,6 +74,8 @@ class UserViewSet(CreateRetrieveListViewSet): # TODO сделать фильтр
 
     @action(detail=False, permission_classes=[IsAuthenticated])
     def subscriptions(self, request):  # TODO сделать пагинацию
+        """ Show all users in subscription. """
+
         subscriptions = Subscription.objects.filter(follower=request.user)
         serializer = SubscriptionSerializer(subscriptions, many=True)
         return Response(serializer.data)

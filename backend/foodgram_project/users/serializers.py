@@ -14,8 +14,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         max_length=150,
         write_only=True,
-        style={"input_type": "password"},
-        label="Password",
+        style={'input_type': 'password'},
+        label='Password',
     )
 
     class Meta:
@@ -77,12 +77,13 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
             email=email,
             password=password,
         )
+
         if not self.user:
             self.user = User.objects.filter(email=email).first()
             if self.user and not self.user.check_password(password):
                 self.fail('invalid_credentials')
         if self.user and self.user.is_active:
-            return attrs  # TODO переделать return
+            return attrs
         self.fail('invalid_credentials')
 
 

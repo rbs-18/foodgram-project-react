@@ -45,7 +45,7 @@ class Subscription(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['follower', 'following'],
+                fields=['follower', 'author'],
                 name='unique_subscription'
             )
         ]
@@ -128,6 +128,14 @@ class Favorite(models.Model):
         related_name='favorite',
         verbose_name='Recipe',
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_favorite'
+            )
+        ]
 
 
 class ShoppingList(models.Model):

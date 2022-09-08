@@ -1,16 +1,17 @@
 from rest_framework.views import APIView
-from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
-from rest_framework import filters, viewsets, mixins
+from rest_framework import filters, viewsets
 from django.shortcuts import get_object_or_404
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
-from recipes.models import Ingredient, Recipe, Tag, Subscription
+from recipes.models import Favorite, Ingredient, Recipe, Tag, Subscription
 from .serializers import (
     IngredientSerializer, RecipeCreateSerializer,
-    TagSerializer, RecipeSerializer, SubscriptionSerializer
+    TagSerializer, RecipeSerializer, SubscriptionSerializer,
+    ShortRecipeSerializer,
 )
 
 User = get_user_model()
@@ -34,11 +35,11 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ('^name',)
 
 
-class RecipeViewSet(viewsets.ModelViewSet): # TODO сделать фильтрацию
+class RecipeViewSet(viewsets.ModelViewSet):  # TODO сделать фильтрацию
     """ Viewset for Recipe model. """
 
     queryset = Recipe.objects.all()
-    http_method_names = ['get', 'post', 'patch']
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):
         if self.request.method in ['POST', 'PATCH']:
@@ -47,6 +48,44 @@ class RecipeViewSet(viewsets.ModelViewSet): # TODO сделать фильтра
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    @action(
+        detail=True,
+        methods=['post'],
+        permission_classes=[IsAuthenticated],
+    )
+    def favorite(self, request, pk):
+        """ Add recipe in favorites. """
+
+        recipe = get_object_or_404(Recipe, pk=pk)
+
+        if Favorite.objects.filter(user=request.user, recipe=recipe).exists():
+            return Response(
+                {'errors': 'The recipe is already in favorites'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        Favorite.objects.create(user=request.user, recipe=recipe)
+        serializer = ShortRecipeSerializer(
+            recipe, context={'request': request},
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @favorite.mapping.delete
+    def delete_favorite(self, request, pk):
+        """ Delete recipe from favorite. """
+
+        recipe = get_object_or_404(Recipe, pk=pk)
+        favorite = Favorite.objects.filter(user=request.user, recipe=recipe)
+
+        if not favorite:
+            return Response(
+                {'error': "The recipe isn't in favorites!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        favorite.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class SubscribeView(APIView):
@@ -57,7 +96,6 @@ class SubscribeView(APIView):
     def post(self, request, user_id):
         follower = request.user
         author = get_object_or_404(User, id=user_id)
-        serializer = SubscriptionSerializer
 
         if follower == author:
             return Response(
@@ -89,7 +127,7 @@ class SubscribeView(APIView):
             follower=request.user, author=author,
         )
 
-        if not subscription.exists():
+        if not subscription:
             return Response(
                 {
                     'errors':
@@ -97,5 +135,6 @@ class SubscribeView(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
