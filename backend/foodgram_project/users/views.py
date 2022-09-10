@@ -1,4 +1,3 @@
-from multiprocessing import context
 from django.contrib.auth import get_user_model
 from djoser.conf import settings
 from djoser.utils import login_user
@@ -83,7 +82,7 @@ class UserViewSet(CreateRetrieveListViewSet):
         serializer = SubscriptionSerializer(
             pages,
             many=True,
-            context={'request': request}
+            context={'request': request},
         )
         return self.get_paginated_response(serializer.data)
 

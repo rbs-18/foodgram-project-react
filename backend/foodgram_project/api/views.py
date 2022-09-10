@@ -1,23 +1,21 @@
-from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
-from rest_framework import filters, viewsets
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from .filters import RecipeFilter
 from .pagination import CustomPageNumberPagination
 from .permissions import IsOwnerOrReadOnly
-from recipes.models import Favorite, Ingredient, Recipe, Tag, Subscription, ShoppingList
-from .serializers import (
-    IngredientSerializer, RecipeCreateSerializer,
-    TagSerializer, RecipeSerializer, SubscriptionSerializer,
-    ShortRecipeSerializer,
-)
-from .filters import RecipeFilter
+from .serializers import (IngredientSerializer, RecipeCreateSerializer,
+                          RecipeSerializer, ShortRecipeSerializer,
+                          SubscriptionSerializer, TagSerializer)
+from recipes.models import (Favorite, Ingredient, Recipe, ShoppingCart,
+                            Subscription, Tag)
 
 User = get_user_model()
 
@@ -38,7 +36,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ('^name',)
 
 
-class RecipeViewSet(viewsets.ModelViewSet):  # TODO сделать фильтрацию
+class RecipeViewSet(viewsets.ModelViewSet):
     """ Viewset for Recipe model. """
 
     queryset = Recipe.objects.all()
@@ -98,7 +96,7 @@ class RecipeViewSet(viewsets.ModelViewSet):  # TODO сделать фильтр�
     def download_shopping_cart(self, request):
         """ Download recipes list from shopping cart. """
 
-        cart = ShoppingList.objects.filter(user=request.user)
+        cart = ShoppingCart.objects.filter(user=request.user)
 
         need_to_buy = dict()
         for cart_object in cart:
@@ -187,7 +185,7 @@ class ShoppingCartView(APIView):
         user = request.user
         recipe = get_object_or_404(Recipe, id=recipe_id)
 
-        if (ShoppingList.objects.filter(user=user, recipe=recipe).exists()):
+        if (ShoppingCart.objects.filter(user=user, recipe=recipe).exists()):
             return Response(
                 {
                     'errors':
@@ -196,7 +194,7 @@ class ShoppingCartView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        ShoppingList.objects.create(user=user, recipe=recipe)
+        ShoppingCart.objects.create(user=user, recipe=recipe)
         serializer = ShortRecipeSerializer(
             recipe, context={'request': request},
         )
@@ -204,7 +202,7 @@ class ShoppingCartView(APIView):
 
     def delete(self, request, recipe_id):
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        cart = ShoppingList.objects.filter(
+        cart = ShoppingCart.objects.filter(
             user=request.user, recipe=recipe,
         )
 

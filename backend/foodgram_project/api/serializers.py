@@ -1,14 +1,11 @@
-from email.policy import default
 from django.contrib.auth import get_user_model
-from drf_extra_fields.fields import Base64ImageField
 from django.shortcuts import get_object_or_404
+from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Subscription, Tag)
 from users.serializers import UserSerializer
-from recipes.models import (
-    Favorite, Ingredient, IngredientRecipe, Recipe,
-    ShoppingList, Tag, Subscription
-)
 
 User = get_user_model()
 
@@ -83,14 +80,17 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('ingredientrecipe_set')
         tags = validated_data.pop('tags')
+
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         self.create_ingredient_recipe_object(recipe)
+
         return recipe
 
     def update(self, instance, validated_data):
         IngredientRecipe.objects.filter(recipe=instance).delete()
         self.create_ingredient_recipe_object(instance)
+
         instance.tags.set(validated_data.pop('tags'))
         instance.name = validated_data.get('name', instance.name)
         instance.image = validated_data.get('image', instance.image)
@@ -99,6 +99,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'cooking_time',
             instance.cooking_time,
         )
+
         return instance
 
     def to_representation(self, instance):
@@ -150,7 +151,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         return self.get_is_obj(obj, Favorite)
 
     def get_is_in_shopping_cart(self, obj):
-        return self.get_is_obj(obj, ShoppingList)
+        return self.get_is_obj(obj, ShoppingCart)
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
