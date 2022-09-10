@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
+from django.http import HttpResponse
 from rest_framework import filters, viewsets
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
@@ -7,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
-from recipes.models import Favorite, Ingredient, Recipe, Tag, Subscription
+from recipes.models import Favorite, Ingredient, Recipe, Tag, Subscription, ShoppingList
 from .serializers import (
     IngredientSerializer, RecipeCreateSerializer,
     TagSerializer, RecipeSerializer, SubscriptionSerializer,
@@ -87,6 +88,37 @@ class RecipeViewSet(viewsets.ModelViewSet):  # TODO сделать фильтр�
         favorite.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=False, permission_classes=[IsAuthenticated])
+    def download_shopping_cart(self, request):
+        """ Download recipes list from shopping cart. """
+
+        cart = ShoppingList.objects.filter(user=request.user)
+
+        need_to_buy = dict()
+        for cart_object in cart:
+            ingredient_queryset = cart_object.recipe.ingredients_list.all()
+            for ingredient in ingredient_queryset:
+                if ingredient.ingredient.name not in need_to_buy:
+                    need_to_buy[ingredient.ingredient.name] = {
+                        'measurement_unit':
+                        ingredient.ingredient.measurement_unit,
+                        'amount': 0,
+                    }
+                need_to_buy[ingredient.ingredient.name]['amount'] += (
+                    ingredient.amount
+                )
+        shopping_list = [
+            f"{index}. {name} - {need_to_buy[name]['amount']} "
+            f"{need_to_buy[name]['measurement_unit']}\n"
+            for index, name in enumerate(need_to_buy)
+        ]
+
+        response = HttpResponse(shopping_list, content_type='text/plain')
+        response['Content-Disposition'] = (
+            'attachment; filename=shopping_list.txt'
+        )
+        return response
+
 
 class SubscribeView(APIView):
     """ View for create and delete Subscriptions. """
@@ -137,4 +169,47 @@ class SubscribeView(APIView):
             )
 
         subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ShoppingCartView(APIView):
+    """ View for shopping cart. """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, recipe_id):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+
+        if (ShoppingList.objects.filter(user=user, recipe=recipe).exists()):
+            return Response(
+                {
+                    'errors':
+                    'Shopping cart error. The recipe already in cart!'
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        ShoppingList.objects.create(user=user, recipe=recipe)
+        serializer = ShortRecipeSerializer(
+            recipe, context={'request': request},
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, recipe_id):
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        cart = ShoppingList.objects.filter(
+            user=request.user, recipe=recipe,
+        )
+
+        if not cart:
+            return Response(
+                {
+                    'errors':
+                    "Shopping cart error. The recipe isn't in cart!",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        cart.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

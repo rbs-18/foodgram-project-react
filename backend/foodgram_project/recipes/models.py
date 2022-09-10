@@ -133,9 +133,12 @@ class Favorite(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
-                name='unique_favorite'
+                name='unique_favorite',
             )
         ]
+
+    def __str__(self):
+        return self.recipe
 
 
 class ShoppingList(models.Model):
@@ -153,3 +156,14 @@ class ShoppingList(models.Model):
         related_name='shoping_list',
         verbose_name='Recipe'
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_shopping_cart',
+            )
+        ]
+
+    # def __str__(self):
+    #     return self.recipe.

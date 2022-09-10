@@ -8,7 +8,7 @@ urlpatterns = [
     path(
         'auth/token/login/',
         CustomTokenCreateView.as_view(),
-        name='custom_login'
+        name='custom_login',
     ),
     path('', include('djoser.urls.authtoken')),
 ]

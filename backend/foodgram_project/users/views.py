@@ -1,18 +1,17 @@
 from django.contrib.auth import get_user_model
-from djoser.views import TokenCreateView
-from djoser.utils import login_user
 from djoser.conf import settings
+from djoser.utils import login_user
+from djoser.views import TokenCreateView
+from recipes.models import Subscription
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from api.pagination import CustomPageNumberSerializer
 from api.serializers import SubscriptionSerializer
-from recipes.models import Subscription
-from .serializers import (
-    CreateUserSerializer, CustomTokenCreateSerializer,
-    PasswordSerializer, UserSerializer
-)
+from .serializers import (CreateUserSerializer, CustomTokenCreateSerializer,
+                          PasswordSerializer, UserSerializer)
 
 User = get_user_model()
 
@@ -28,10 +27,11 @@ class CreateRetrieveListViewSet(
     pass
 
 
-class UserViewSet(CreateRetrieveListViewSet): # TODO сделать фильтрацию
+class UserViewSet(CreateRetrieveListViewSet):
     """ Viewset for User model. """
 
     queryset = User.objects.all()
+    pagination_class = CustomPageNumberSerializer
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -70,6 +70,7 @@ class UserViewSet(CreateRetrieveListViewSet): # TODO сделать фильтр
             user.set_password(serializer.validated_data['new_password'])
             user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, permission_classes=[IsAuthenticated])
