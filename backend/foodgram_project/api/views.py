@@ -7,13 +7,17 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
 
+from .pagination import CustomPageNumberPagination
+from .permissions import IsOwnerOrReadOnly
 from recipes.models import Favorite, Ingredient, Recipe, Tag, Subscription, ShoppingList
 from .serializers import (
     IngredientSerializer, RecipeCreateSerializer,
     TagSerializer, RecipeSerializer, SubscriptionSerializer,
     ShortRecipeSerializer,
 )
+from .filters import RecipeFilter
 
 User = get_user_model()
 
@@ -23,7 +27,6 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    pagination_class = None  # TODO определиться, где определять класс пагинации
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -31,7 +34,6 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    pagination_class = None  # TODO определиться, где определять класс пагинации
     filter_backends = (filters.SearchFilter,)
     search_fields = ('^name',)
 
@@ -41,6 +43,10 @@ class RecipeViewSet(viewsets.ModelViewSet):  # TODO сделать фильтр�
 
     queryset = Recipe.objects.all()
     http_method_names = ['get', 'post', 'patch', 'delete']
+    permission_class = IsOwnerOrReadOnly
+    pagination_class = CustomPageNumberPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.request.method in ['POST', 'PATCH']:

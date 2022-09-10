@@ -1,3 +1,4 @@
+from multiprocessing import context
 from django.contrib.auth import get_user_model
 from djoser.conf import settings
 from djoser.utils import login_user
@@ -8,7 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from api.pagination import CustomPageNumberSerializer
+from api.pagination import CustomPageNumberPagination
 from api.serializers import SubscriptionSerializer
 from .serializers import (CreateUserSerializer, CustomTokenCreateSerializer,
                           PasswordSerializer, UserSerializer)
@@ -31,7 +32,7 @@ class UserViewSet(CreateRetrieveListViewSet):
     """ Viewset for User model. """
 
     queryset = User.objects.all()
-    pagination_class = CustomPageNumberSerializer
+    pagination_class = CustomPageNumberPagination
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -74,12 +75,17 @@ class UserViewSet(CreateRetrieveListViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, permission_classes=[IsAuthenticated])
-    def subscriptions(self, request):  # TODO сделать пагинацию
+    def subscriptions(self, request):
         """ Show all users in subscription. """
 
         subscriptions = Subscription.objects.filter(follower=request.user)
-        serializer = SubscriptionSerializer(subscriptions, many=True)
-        return Response(serializer.data)
+        pages = self.paginate_queryset(subscriptions)
+        serializer = SubscriptionSerializer(
+            pages,
+            many=True,
+            context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
 
 
 class CustomTokenCreateView(TokenCreateView):

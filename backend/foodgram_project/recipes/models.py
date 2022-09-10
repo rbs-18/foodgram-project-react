@@ -15,6 +15,9 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ['name']
+
 
 class Ingredient(models.Model):
     """ Model for ingredients. """
@@ -24,6 +27,15 @@ class Ingredient(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        ordering = ['name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique_ingredient',
+            )
+        ]
 
 
 class Subscription(models.Model):
@@ -43,10 +55,11 @@ class Subscription(models.Model):
     )
 
     class Meta:
+        ordering = ['-id']
         constraints = [
             models.UniqueConstraint(
                 fields=['follower', 'author'],
-                name='unique_subscription'
+                name='unique_subscription',
             )
         ]
 
@@ -82,6 +95,9 @@ class Recipe(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        ordering = ['-id']
+
 
 class IngredientRecipe(models.Model):
     """
@@ -102,6 +118,15 @@ class IngredientRecipe(models.Model):
 
     def __str__(self):
         return f'{self.ingredient} for {self.recipe}'
+
+    class Meta:
+        ordering = ['-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique_ingredient_recipe',
+            )
+        ]
 
 
 class TagRecipe(models.Model):
@@ -130,6 +155,7 @@ class Favorite(models.Model):
     )
 
     class Meta:
+        ordering = ['-id']
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
@@ -158,12 +184,10 @@ class ShoppingList(models.Model):
     )
 
     class Meta:
+        ordering = ['-id']
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
                 name='unique_shopping_cart',
             )
         ]
-
-    # def __str__(self):
-    #     return self.recipe.
