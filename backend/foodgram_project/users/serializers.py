@@ -57,7 +57,7 @@ class UserSerializer(serializers.ModelSerializer):
         ).exists()
 
 
-class CustomTokenCreateSerializer(TokenCreateSerializer):
+class TokenCreateByEmailSerializer(TokenCreateSerializer):
     """ Custom serializer for geting token. """
 
     password = serializers.CharField(
@@ -79,7 +79,7 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
         )
 
         if not self.user:
-            self.user = User.objects.filter(email=email).first()
+            self.user = User.objects.get(email=email)
             if self.user and not self.user.check_password(password):
                 self.fail('invalid_credentials')
         if self.user and self.user.is_active:

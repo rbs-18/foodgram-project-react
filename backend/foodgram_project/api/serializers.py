@@ -3,8 +3,10 @@ from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Subscription, Tag)
+from recipes.models import (
+    Favorite, Ingredient, IngredientRecipe, Recipe,
+    ShoppingCart, Subscription, Tag,
+)
 from users.serializers import UserSerializer
 
 User = get_user_model()
@@ -66,7 +68,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'cooking_time',
         )
 
-    def create_ingredient_recipe_object(self, recipe):
+    def _create_ingredient_recipe_object(self, recipe):
         for ingredient in self.initial_data.get('ingredients'):
             current_ingredient = get_object_or_404(
                 Ingredient, id=ingredient.get('id'),
@@ -83,24 +85,17 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
-        self.create_ingredient_recipe_object(recipe)
+        self._create_ingredient_recipe_object(recipe)
 
         return recipe
 
     def update(self, instance, validated_data):
+        validated_data.pop('ingredientrecipe_set')
         IngredientRecipe.objects.filter(recipe=instance).delete()
-        self.create_ingredient_recipe_object(instance)
+        self._create_ingredient_recipe_object(instance)
 
         instance.tags.set(validated_data.pop('tags'))
-        instance.name = validated_data.get('name', instance.name)
-        instance.image = validated_data.get('image', instance.image)
-        instance.text = validated_data.get('text', instance.text)
-        instance.cooking_time = validated_data.get(
-            'cooking_time',
-            instance.cooking_time,
-        )
-
-        return instance
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         data = RecipeSerializer(
@@ -141,17 +136,17 @@ class RecipeSerializer(serializers.ModelSerializer):
         queryset = obj.ingredients_list.all()
         return IngredientRecipeSerializer(queryset, many=True).data
 
-    def get_is_obj(self, recipe, obj):
+    def _get_method_field(self, recipe, obj):
         return obj.objects.filter(
             user=self.context.get('request').user.id,
             recipe=recipe,
         ).exists()
 
     def get_is_favorited(self, obj):
-        return self.get_is_obj(obj, Favorite)
+        return self._get_method_field(obj, Favorite)
 
     def get_is_in_shopping_cart(self, obj):
-        return self.get_is_obj(obj, ShoppingCart)
+        return self._get_method_field(obj, ShoppingCart)
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):

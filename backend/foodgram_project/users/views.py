@@ -8,10 +8,12 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from api.pagination import CustomPageNumberPagination
+from api.pagination import LimitPageNumberPagination
 from api.serializers import SubscriptionSerializer
-from .serializers import (CreateUserSerializer, CustomTokenCreateSerializer,
-                          PasswordSerializer, UserSerializer)
+from .serializers import (
+    CreateUserSerializer, TokenCreateByEmailSerializer,
+    PasswordSerializer, UserSerializer
+)
 
 User = get_user_model()
 
@@ -31,7 +33,7 @@ class UserViewSet(CreateRetrieveListViewSet):
     """ Viewset for User model. """
 
     queryset = User.objects.all()
-    pagination_class = CustomPageNumberPagination
+    pagination_class = LimitPageNumberPagination
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -87,10 +89,10 @@ class UserViewSet(CreateRetrieveListViewSet):
         return self.get_paginated_response(serializer.data)
 
 
-class CustomTokenCreateView(TokenCreateView):
+class TokenCreateByEmailView(TokenCreateView):
     """ Custom viewset for creating token. """
 
-    serializer_class = CustomTokenCreateSerializer
+    serializer_class = TokenCreateByEmailSerializer
 
     def _action(self, serializer):
         token = login_user(self.request, serializer.user)

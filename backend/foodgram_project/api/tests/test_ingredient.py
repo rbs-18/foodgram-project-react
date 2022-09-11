@@ -4,8 +4,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ..serializers import IngredientSerializer
 from recipes.models import Ingredient
+from ..serializers import IngredientSerializer
 
 
 class GetIngredientsTest(APITestCase):
@@ -29,7 +29,7 @@ class GetIngredientsTest(APITestCase):
         self.assertEqual(
             Ingredient.objects.count(),
             2,
-            "Incorrect creation objects"
+            "Incorrect creation objects",
         )
 
     def test_get_all_ingredients(self):

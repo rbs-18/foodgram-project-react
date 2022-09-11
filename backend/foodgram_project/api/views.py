@@ -8,14 +8,16 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from recipes.models import (
+    Favorite, Ingredient, Recipe, ShoppingCart, Subscription, Tag,
+)
 from .filters import RecipeFilter
-from .pagination import CustomPageNumberPagination
+from .pagination import LimitPageNumberPagination
 from .permissions import IsOwnerOrReadOnly
-from .serializers import (IngredientSerializer, RecipeCreateSerializer,
-                          RecipeSerializer, ShortRecipeSerializer,
-                          SubscriptionSerializer, TagSerializer)
-from recipes.models import (Favorite, Ingredient, Recipe, ShoppingCart,
-                            Subscription, Tag)
+from .serializers import (
+    IngredientSerializer, RecipeCreateSerializer, RecipeSerializer,
+    ShortRecipeSerializer, SubscriptionSerializer, TagSerializer,
+)
 
 User = get_user_model()
 
@@ -42,7 +44,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     http_method_names = ['get', 'post', 'patch', 'delete']
     permission_class = IsOwnerOrReadOnly
-    pagination_class = CustomPageNumberPagination
+    pagination_class = LimitPageNumberPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
 
@@ -92,13 +94,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         favorite.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, permission_classes=[IsAuthenticated])
-    def download_shopping_cart(self, request):
-        """ Download recipes list from shopping cart. """
-
-        cart = ShoppingCart.objects.filter(user=request.user)
-
+    def _form_shopping_list(self, cart):
         need_to_buy = dict()
+
         for cart_object in cart:
             ingredient_queryset = cart_object.recipe.ingredients_list.all()
             for ingredient in ingredient_queryset:
@@ -111,11 +109,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 need_to_buy[ingredient.ingredient.name]['amount'] += (
                     ingredient.amount
                 )
-        shopping_list = [
+
+        return [
             f"{index}. {name} - {need_to_buy[name]['amount']} "
             f"{need_to_buy[name]['measurement_unit']}\n"
             for index, name in enumerate(need_to_buy)
         ]
+
+    @action(detail=False, permission_classes=[IsAuthenticated])
+    def download_shopping_cart(self, request):
+        """ Download recipes list from shopping cart. """
+
+        cart = ShoppingCart.objects.filter(user=request.user)
+
+        shopping_list = self._form_shopping_list(cart)
 
         response = HttpResponse(shopping_list, content_type='text/plain')
         response['Content-Disposition'] = (

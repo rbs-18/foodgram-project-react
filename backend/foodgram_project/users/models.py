@@ -10,8 +10,8 @@ class User(AbstractUser):
     first_name = models.CharField('First name', max_length=150)
     last_name = models.CharField('Last name', max_length=150)
 
-    def __str__(self):
-        return self.username
-
     class Meta:
         ordering = ['-id']
+
+    def __str__(self):
+        return self.username

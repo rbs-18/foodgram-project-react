@@ -1,8 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import (APIClient, APIRequestFactory, APITestCase,
-                                 force_authenticate)
+from rest_framework.test import (
+    APIClient, APIRequestFactory, APITestCase, force_authenticate,
+)
 
 from ..serializers import UserSerializer
 from .errors import TestErrors
