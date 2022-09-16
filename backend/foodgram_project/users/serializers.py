@@ -1,5 +1,6 @@
-from django.contrib.auth import authenticate, get_user_model
-import django.contrib.auth.password_validation as validators
+from django.contrib.auth import (
+    authenticate, get_user_model, password_validation
+)
 from djoser.serializers import TokenCreateSerializer
 from rest_framework import serializers
 
@@ -30,7 +31,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
         )
 
     def validate_password(self, value):
-        validators.validate_password(value)
+        password_validation.validate_password(value)
         return value
 
 
@@ -82,9 +83,9 @@ class TokenCreateByEmailSerializer(TokenCreateSerializer):
             self.user = User.objects.get(email=email)
             if self.user and not self.user.check_password(password):
                 self.fail('invalid_credentials')
-        if self.user and self.user.is_active:
-            return attrs
-        self.fail('invalid_credentials')
+        if not (self.user and self.user.is_active):
+            self.fail('invalid_credentials')
+        return attrs
 
 
 class PasswordSerializer(serializers.Serializer):
@@ -109,5 +110,5 @@ class PasswordSerializer(serializers.Serializer):
         return attrs
 
     def validate_new_password(self, value):
-        validators.validate_password(value)
+        password_validation.validate_password(value)
         return value

@@ -4,8 +4,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ..serializers import TagSerializer
 from recipes.models import Tag
+from ..serializers import TagSerializer
 
 
 class GetTagsTest(APITestCase):

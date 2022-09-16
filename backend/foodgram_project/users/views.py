@@ -12,7 +12,7 @@ from api.pagination import LimitPageNumberPagination
 from api.serializers import SubscriptionSerializer
 from .serializers import (
     CreateUserSerializer, TokenCreateByEmailSerializer,
-    PasswordSerializer, UserSerializer
+    PasswordSerializer, UserSerializer,
 )
 
 User = get_user_model()
