@@ -33,18 +33,20 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Push frontend to Docker Hub
-        uses: docker/build-push-action@v2
-        with:
-          file: frontend/Dockerfile
-          push: true
-          tags: rbs18/foodgram_frontend:latest
       - name: Push backend to Docker Hub
         uses: docker/build-push-action@v2
         with:
-          file: backend/Dockerfile
+          context: ./backend/
+          file: ./backend/Dockerfile
           push: true
-          tags: rbs18/foodgram_backend:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:v1.0
+      - name: Push frontend to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          context: ./frontend/
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:v1.0
 
   # deploy:
   #   runs-on: ubuntu-latest

@@ -8,7 +8,7 @@ services:
       - /var/lib/postgresql/data
 
   backend:
-    image: rbs18/foodgram_backend:latest
+    image: rbs18/foodgram_backend:v1.0
     restart: always
     volumes:
       - static_value:/app/static/
@@ -18,7 +18,7 @@ services:
     env_file: ./.env
 
   frontend:
-    image: rbs18/foodgram_frontend:latest
+    image: rbs18/foodgram_frontend:v1.0
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
