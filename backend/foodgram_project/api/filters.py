@@ -1,9 +1,12 @@
 from django_filters import rest_framework as filters
+from rest_framework.filters import SearchFilter
 
 from recipes.models import Recipe, Tag
 
 
 class RecipeFilter(filters.FilterSet):
+    """ Filter for recipes names. """
+
     tags = filters.ModelMultipleChoiceFilter(
         queryset=Tag.objects.all(),
         field_name='tags__slug',
@@ -27,3 +30,9 @@ class RecipeFilter(filters.FilterSet):
     class Meta:
         model = Recipe
         fields = ('tags', 'author', 'is_favorited', 'is_in_shopping_cart',)
+
+
+class IngredientSearchFilter(SearchFilter):
+    """ Search filter with searching param is name. """
+
+    search_param = 'name'

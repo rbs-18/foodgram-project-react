@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from recipes.models import (
     Favorite, Ingredient, Recipe, ShoppingCart, Subscription, Tag,
 )
-from .filters import RecipeFilter
+from .filters import IngredientSearchFilter, RecipeFilter
 from .pagination import LimitPageNumberPagination
 from .permissions import IsOwnerOrReadOnly
 from .serializers import (
@@ -34,7 +34,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (IngredientSearchFilter,)
     search_fields = ('^name',)
 
 
@@ -43,7 +43,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = Recipe.objects.all()
     http_method_names = ['get', 'post', 'patch', 'delete']
-    permission_class = IsOwnerOrReadOnly
+    permission_classes = (IsOwnerOrReadOnly,)
     pagination_class = LimitPageNumberPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
