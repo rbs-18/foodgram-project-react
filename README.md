@@ -1,5 +1,4 @@
-![workflow](https://github.com/rbs-18/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
-
+![workflow](https://github.com/rbs-18/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg?branch=feature-1)
 # foodgram project
 
 Grocery assistant
@@ -441,18 +440,64 @@ All
 ## TECHNOLOGY
 
 - Python 3.8
-- Django
+- Django 4.0.0
 - Django Rest Framework 3.12
 - Docker
+- CI,CD
 
 
 ## DATABASE
 
-- None
+- PostgreSQL
 
 
 ## HOW TO START PROJECT
-None
+### IN INTERNET
+Go to . It's all!
+
+### LOCALLY (IF SERVER DOESN'T WORK)
+- Clone repository and going:
+```
+git clone ...
+cd /infra
+```
+- Change nginx settings (servername)
+- Create .env file (like template)
+
+SECRET_KEY=...
+DEBUG=...
+ALLOWED_HOSTS=...
+DB_ENGINE=...
+DB_NAME=...
+POSTGRES_USER=...
+POSTGRES_PASSWORD=...
+DB_HOST=...
+DB_PORT=...
+
+- Deploy and launch app:
+```bash
+docker-compose up -d --build
+```
+
+- Make migrations:
+```bash
+docker-compose exec backend python manage.py migrate
+```
+
+- Fill database by data (optionally)
+```bash
+docker-compose exec backend python manage.py loaddata ingredients.json
+```
+
+- Create superuser
+```bash
+docker-compose exec backend python manage.py createsuperuser
+```
+
+- Collect static
+```bash
+docker-compose exec backend python manage.py collectstatic --no-input
+```
 
 # AUTHORS
 *_Kozhevnikov Aleksei_*
