@@ -6,7 +6,7 @@ User = get_user_model()
 
 
 @admin.register(User)
-class UserAdminWithNames(UserAdmin):
+class UserWithPersonalFieldsAdmin(UserAdmin):
     list_display = (
         'id',
         'email',
@@ -15,5 +15,6 @@ class UserAdminWithNames(UserAdmin):
         'last_name',
         'is_staff',
     )
+    exclude = ('user_permissions', 'groups')
     list_filter = ('email', 'username')
     search_fields = ('username__startswith', 'email__startswith')
