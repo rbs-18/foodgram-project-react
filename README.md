@@ -1,4 +1,3 @@
-![workflow](https://github.com/rbs-18/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg?branch=feature-1)
 # foodgram project
 
 Grocery assistant

@@ -32,6 +32,7 @@ class TagAdmin(admin.ModelAdmin):
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'measurement_unit')
+    search_fields = ('name__startswith',)
 
 
 @admin.register(Subscription)

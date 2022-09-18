@@ -113,7 +113,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return [
             f"{index}. {name} - {need_to_buy[name]['amount']} "
             f"{need_to_buy[name]['measurement_unit']}\n"
-            for index, name in enumerate(need_to_buy)
+            for index, name in enumerate(need_to_buy, 1)
         ]
 
     @action(detail=False, permission_classes=[IsAuthenticated])
