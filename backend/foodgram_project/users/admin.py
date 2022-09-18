@@ -17,4 +17,4 @@ class UserWithPersonalFieldsAdmin(UserAdmin):
     )
     list_filter = ('email', 'username')
     search_fields = ('username__startswith', 'email__startswith')
-    ordering = ('id',)
+    ordering = ('email',)
